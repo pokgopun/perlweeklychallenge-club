@@ -66,8 +66,8 @@ func utCount(s []int) (count int) {
 	l := len(s)
 	m := make(map[int]int)
 	var c string
-	for _, idxs := range strings.Split(combo(3, string(ibytes(l)), "", &c, byte(l)), string(byte(l))) {
-		for _, v := range []byte(idxs) {
+	for _, idxs := range strings.Split(combo(3, string(irunes(l)), "", &c, rune(l)), string(rune(l))) {
+		for _, v := range []rune(idxs) {
 			m[s[int(v)]]++
 		}
 		if len(m) == 3 {
@@ -77,15 +77,15 @@ func utCount(s []int) (count int) {
 	}
 	return count
 }
-func ibytes(n int) []byte {
-	b := make([]byte, n)
+func irunes(n int) []rune {
+	r := make([]rune, n)
 	for i := 0; i < n; i++ {
-		b[i] = byte(i)
+		r[i] = rune(i)
 	}
-	return b
+	return r
 }
-func combo(r int, e, c string, res *string, sep byte) string {
-	lc, le := len(c), len(e)
+func combo(r int, e, c string, res *string, sep rune) string {
+	lc, le := len([]rune(c)), len([]rune(e))
 	if lc == r || lc+le == r {
 		*res += string(sep) + (c + e)[:r]
 		return ""
