@@ -50,61 +50,90 @@ package main
 import (
 	"fmt"
 	"maps"
+	"slices"
 )
 
 type cash struct {
-	objCnt map[int]int
-	objs   []int
+	noteCnt map[int]int
+	notes   []int
 }
 
-func newCash() (c cash) {
-	c.objs = []int{20, 10, 5}
-	c.objCnt = make(map[int]int)
+func newCash(notes []int) (c cash) {
+	c.notes = sortAndDedup(notes)
+	slices.Reverse(c.notes)
+	c.noteCnt = make(map[int]int)
 	return c
 }
 
 func (c *cash) add(m map[int]int) {
-	for _, v := range c.objs {
-		c.objCnt[v] += m[v]
+	for _, v := range c.notes {
+		c.noteCnt[v] += m[v]
 	}
 }
 
 func (c *cash) deduct(n int) bool {
-	defer maps.DeleteFunc(c.objCnt, func(k, v int) bool {
+	defer maps.DeleteFunc(c.noteCnt, func(k, v int) bool {
 		return k < 0
 	})
-	for _, v := range c.objs {
-		c.objCnt[-v] = min(n/v, c.objCnt[v])
-		n -= v * c.objCnt[-v]
+	for _, v := range c.notes {
+		c.noteCnt[-v] = min(n/v, c.noteCnt[v])
+		n -= v * c.noteCnt[-v]
 	}
 	if n != 0 {
 		return false
 	}
-	for _, v := range c.objs {
-		c.objCnt[v] -= c.objCnt[-v]
+	for _, v := range c.notes {
+		c.noteCnt[v] -= c.noteCnt[-v]
 	}
 	return true
 }
 
-func sellable(s []int) bool {
-	c := newCash()
-	for _, v := range s {
-		c.add(map[int]int{v: 1})
-		if c.deduct(v-5) == false {
+func sellable(price int, notes []int) bool {
+	c := newCash([]int{20, 10, 5})
+	for _, v := range sortAndDedup(append(notes, price)) {
+		if slices.Index(c.notes, v) == -1 {
 			return false
 		}
 	}
+	//fmt.Println(c)
+	for _, v := range notes {
+		//fmt.Println(v)
+		c.add(map[int]int{v: 1})
+		//fmt.Println(c)
+		if c.deduct(v-price) == false {
+			return false
+		}
+		//fmt.Println(c)
+	}
 	return true
 }
+
+func sortAndDedup(s []int) []int {
+	slices.Sort(s)
+	l := len(s)
+	i, j := 0, l
+	for j > 1 {
+		if s[i] == s[i+1] {
+			copy(s[i:], s[i+1:])
+			l--
+		} else {
+			i++
+		}
+		j--
+	}
+	return s[:l]
+}
+
 func main() {
 	for _, data := range []struct {
-		input  []int
-		output bool
+		price    int
+		notes    []int
+		sellable bool
 	}{
-		{[]int{5, 5, 5, 10, 20}, true},
-		{[]int{5, 5, 10, 10, 20}, false},
-		{[]int{5, 5, 5, 20}, true},
+		{5, []int{5, 5, 5, 10, 20}, true},
+		{5, []int{5, 5, 10, 10, 20}, false},
+		{5, []int{5, 5, 5, 20}, true},
 	} {
-		fmt.Println(sellable(data.input) == data.output)
+		fmt.Println(sellable(data.price, data.notes) == data.sellable)
 	}
 }
