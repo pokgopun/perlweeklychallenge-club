@@ -56,7 +56,21 @@ func isAbbrv(s []string, a string) bool {
 		return false
 	}
 	for i, v := range s {
-		if (v[0]-a[i])%32 != 0 {
+		/*
+			if (v[0]-a[i])%32 != 0 {
+				return false
+			}
+		*/
+		v1, v2 := v[0], a[i]                   // assign 1st char of 1st word and 1st char of abbrv to variables
+		for _, e := range [2]*byte{&v1, &v2} { // apply both variable to the same logic
+			switch {
+			case *e < 65 || *e > 122, *e > 90 && *e < 97: // none alphabetic character is allowed
+				return false
+			case *e >= 97 && *e <= 122: // convert any lowercase character to uppercase
+				*e -= 32
+			}
+		}
+		if v1 != v2 {
 			return false
 		}
 	}
