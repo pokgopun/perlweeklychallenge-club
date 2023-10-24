@@ -33,10 +33,10 @@ Task 2: Build Array
 """
 ### solution by pokgopun@gmail.com
 
-def isAbbrv(tup, abbrv):
+def isAbbrv(strings:tuple, abbrv:str):
     return abbrv.lower()=="".join(
             tuple(
-                map(lambda x: x[0], tup
+                map(lambda x: x[0], strings
                     )
                 )
             ).lower()
