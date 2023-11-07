@@ -35,15 +35,12 @@ Task 2: Flip Matrix
 
 def findMissing(tup1, tup2):
     return tuple(
-            filter(lambda x: len(x) > 0,
-                (
-                    set(tup1).difference(set(tup2)),
-                    set(tup2).difference(set(tup1)),
-                    )
+            x for x in (
+                set(tup1).difference(set(tup2)),
+                set(tup2).difference(set(tup1)),
                 )
-            )
-
-
+            if len(x) > 0
+        )
 
 for (inpt1,inpt2),otpt in {
         ((1, 2, 3),(2, 4, 6)): ({1, 3}, {4, 6}),
