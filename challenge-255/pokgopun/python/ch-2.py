@@ -42,11 +42,14 @@ import re
 
 def mostFreqWord(p,w: str):
     dct = dict()
+    r = ""
+    mx = 0
     for s in ( e.group(0) for e in re.finditer(r'\w+',p) if e.group(0) != w ):
         dct[s] = dct.setdefault(s,0) + 1
-    mx = max(dct.values())
-    for e in dct.items():
-        if e[1] == mx: return e[0]
+        if dct[s] > mx:
+            mx = dct[s]
+            r = s
+    return r
 
 import unittest
 

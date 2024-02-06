@@ -31,9 +31,13 @@ Task 2: Most Frequent Word
 ### solution by pokgopun@gmail.com
 
 def oddChar(s,t: str):
+    dct = dict(( (e, t.count(e)) for e in t))
     for c in s:
-        t = t.replace(c,"",1)
-    return t
+        dct[c] = dct.setdefault(c,0) - 1
+    for k,v in dct.items():
+        if v > 0: return k
+    return ""
+
 
 import unittest
 
