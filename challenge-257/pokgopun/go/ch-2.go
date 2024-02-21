@@ -132,20 +132,19 @@ func (rw row) l1Pos() int {
 type matrix []row
 
 func (mt matrix) noButtomZeroes() matrix {
-	s := mt
 	l := len(mt)
 	lz := l
 	for l > 0 {
 		l--
 		if mt[l].isAllZero() {
-			s = mt[:l]
+			mt = mt[:l]
 			lz--
 		}
 		if l != lz {
 			break
 		}
 	}
-	return s
+	return mt
 }
 
 func (mt matrix) isSingleNonZeroColumn(col int) bool {
