@@ -100,34 +100,43 @@ SO WHAT DO YOU THINK ?
 """
 ### solution by pokgopun@gmail.com
 
-def areAllZeroes(tup: tuple):   ### check if all members are zeros
-    return sum( x!=0 for x in tup )==0
+def rowContainsAllZeroes(row: tuple):                        ### check if a row contains all zeros
+    return sum(
+            x!=0 for x in row
+            ) == 0
 
-def genNZ(tot: tuple):   ### remove bottom all-zeroes rows, return others rows in reverse
-    c = 0
-    l = len(tot)
-    for i in range(l):
-        if areAllZeroes(tot[l-i-1]):
-            c += 1
-            if c > i:
-                continue
-        yield tot[l-i-1]
+def removeBottomRowWithAllZeroes(matrix: tuple):             ### remove any bottom all-zeroes row
+    l = len(matrix)
+    lz = l
+    while l > 0:
+            l -= 1
+            if rowContainsAllZeroes(matrix[l]):
+                matrix = matrix[:l]
+                lz -= 1
+            if l != lz:                                      ### stop the removal process when all-zeroes row is no longer continously found from the bottom
+                break
+    return matrix
 
-def lopos(tup: tuple):   ### position of leading 1, return -1 if there is no leadnig 1
-    for i in range(len(tup)):
-        if tup[i]==1:
+def l1pos(row: tuple):                                       ### return position of leading 1, if not found return -1
+    for i in range(len(row)):
+        if row[i]==1:
             return i
     return -1
 
-def isRRE(tot: tuple):   ### check if matrix is Reduced Row Echelon
-    l = len(tot[0])    ### to store previous leading 1 position, as we will do it in backward, initial value will be the row length which is always greater than any position
-    tot = tuple(genNZ(tot))   ### matrix with bottom all-zeroes rows removed, but the rows will be reversed
-    rc = len(tot)             ### row count, this will be used by list comprehension that check if same columns as the leading 1 are all zeros or not
-    for t in tot:
-        lp = lopos(t)   ### find out the poistion of leading 1
-        if lp <  0 or lp >= l or sum(tot[r][lp]==0 for r in range(rc))!=rc-1:   ### False if leading 1 cannot be found or its position is not less than the previous one or other values in its postions are not all zeros
+def isValidL1col(matrix: tuple, col: int):                   ### check values of the specified column of a matrix if it contains only one value that is not zero
+    rc = len(matrix)
+    return sum(
+            matrix[r][col]==0 for r in range(rc)
+            ) !=  rc-1
+
+def isRRE(matrix: tuple):                                    ### check if matrix is Reduced Row Echelon
+    l1p = -1                                                 ### var to store l1 position of the previous row, start with -1 so it is always less than l1 of the first row
+    matrix = removeBottomRowWithAllZeroes(matrix)            ### removed bottom all-zeroes rows from the matrix
+    for row in matrix:
+        l1 = l1pos(row)                                      ### find poistion of leading 1
+        if l1 < 0 or l1 <= l1p or isValidL1col(matrix,l1):   ### False if l1 not found or found but not valid
             return False
-        l = lp 
+        l1p = l1                                             ### store l1 of the previous row
     return True
 
 import unittest
