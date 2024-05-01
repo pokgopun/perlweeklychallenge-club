@@ -59,12 +59,24 @@ type Answer struct {
 
 type text string
 
-func (txt text) lc(widths []int) Answer {
+type widths [26]int
+
+func (ws widths) get(r rune) int {
+	if r >= 97 && r <= 122 {
+		r -= 32
+	}
+	if r >= 65 && r <= 90 {
+		return ws[r-65]
+	}
+	return 1
+}
+
+func (txt text) lc(ws widths) Answer {
 	var l, lc, w int
 	lc = 1
-	var b byte
-	for _, b = range []byte(txt) {
-		w = widths[b-97]
+	var r rune
+	for _, r = range txt {
+		w = ws.get(r)
 		l += w
 		if l > lim {
 			lc++
@@ -76,13 +88,17 @@ func (txt text) lc(widths []int) Answer {
 
 func main() {
 	for _, data := range []struct {
-		str    text
-		widths []int
-		ans    Answer
+		str text
+		ws  widths
+		ans Answer
 	}{
-		{"abcdefghijklmnopqrstuvwxyz", []int{10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{3, 60}},
-		{"bbbcccdddaaa", []int{4, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{2, 4}},
+		{"abcdefghijklmnopqrstuvwxyz", widths{10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{3, 60}},
+		{"bbbcccdddaaa", widths{4, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{2, 4}},
+		{"กชค", widths{4, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{1, 3}},
+		{"กชa", widths{96, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{1, 98}},
+		{"กชคa", widths{96, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{1, 99}},
+		{"กชคงa", widths{96, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, Answer{1, 100}},
 	} {
-		io.WriteString(os.Stdout, cmp.Diff(data.str.lc(data.widths), data.ans)) // blank if ok,, otherwise show the difference
+		io.WriteString(os.Stdout, cmp.Diff(data.str.lc(data.ws), data.ans)) // blank if ok,, otherwise show the difference
 	}
 }
