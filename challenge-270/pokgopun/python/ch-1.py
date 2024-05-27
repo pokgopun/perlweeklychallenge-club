@@ -39,9 +39,9 @@ Task 2: Distribute Elements
 """
 ### solution by pokgopun@gmail.com
 
-def isAllZero(lst):
-    for i in lst:
-        if i!=0:
+def hasAllZero(iter):
+    for v in iter:
+        if v!=0:
             return False
     return True
 
@@ -53,9 +53,13 @@ def cntSP(mn: list):
         for j in range(n):
             if mn[i][j] != 1:
                 continue
-            if isAllZero((mn[x][j] for x in range(m) if x!=i)) == False:
+            if hasAllZero((mn[i][e] for e in range(j))) == False:
                 continue
-            if isAllZero((mn[i][x] for x in range(n) if x!=j)) == False:
+            if hasAllZero((mn[i][e] for e in range(j+1,n))) == False:
+                continue
+            if hasAllZero((mn[e][j] for e in range(i))) == False:
+                continue
+            if hasAllZero((mn[e][j] for e in range(i+1,m))) == False:
                 continue
             c += 1
     return c
