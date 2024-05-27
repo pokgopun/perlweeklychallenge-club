@@ -55,7 +55,7 @@ import (
 type row []int
 
 func (rw row) countOne() int {
-	c := 0
+	var c int
 	l := len(rw)
 	for i := 0; i < l; i++ {
 		if rw[i] == 1 {
@@ -68,13 +68,13 @@ func (rw row) countOne() int {
 type matrix []row
 
 func (mtx matrix) maxOneRow() int {
-	idx := 0
-	mx := len(mtx[idx])
-	cnt := mtx[idx].countOne()
+	mx := len(mtx[0])
+	cnt := mtx[0].countOne()
 	if cnt == mx {
-		return idx + 1
+		return 1
 	}
-	cntMx, cntMxIdx := cnt, idx
+	var idx, cntMxIdx int
+	cntMx := cnt
 	l := len(mtx)
 	for idx = 1; idx < l; idx++ {
 		cnt = mtx[idx].countOne()
@@ -82,8 +82,7 @@ func (mtx matrix) maxOneRow() int {
 			return idx + 1
 		}
 		if cnt > cntMx {
-			cntMx = cnt
-			cntMxIdx = idx
+			cntMx, cntMxIdx = cnt, idx
 		}
 	}
 	return cntMxIdx + 1
