@@ -39,45 +39,77 @@ Task 2: Distribute Elements
 """
 ### solution by pokgopun@gmail.com
 
-def hasAllZero(iter):
-    for v in iter:
-        if v!=0:
-            return False
-    return True
-
-def cntSP(mn: list):
-    m = len(mn)
-    n = len(mn[0])
-    c = 0
-    for i in range(m):
-        for j in range(n):
-            if mn[i][j] != 1:
-                continue
-            if hasAllZero((mn[i][e] for e in range(j))) == False:
-                continue
-            if hasAllZero((mn[i][e] for e in range(j+1,n))) == False:
-                continue
-            if hasAllZero((mn[e][j] for e in range(i))) == False:
-                continue
-            if hasAllZero((mn[e][j] for e in range(i+1,m))) == False:
-                continue
-            c += 1
-    return c
+class Matrix:
+    def __init__(self, rows: list):
+        self.data = rows
+        self.rowCount = len(rows)
+        self.rowData = [None for e in range(self.rowCount)]
+        self.rowProcessCount = 0
+        self.colCount = len(rows[0])
+        self.colData = [None for e in range(self.colCount)]
+        self.colProcessCount = 0
+        self.specialPoint = []
+        self.specialPointCount = 0
+        self.process()
+    def process(self):
+        for r in range(self.rowCount):
+            for c in range(self.colCount):
+                if self.data[r][c] != 1:
+                    continue
+                if self.rowHasSingleNoneZero(r) == False:
+                    continue
+                if self.colHasSingleNoneZero(c) == False:
+                    continue
+                self.specialPoint.append((r,c))
+        self.specialPointCount = len(self.specialPoint)
+    def rowHasSingleNoneZero(self, r):
+        if self.rowData[r] == None:
+            self.rowData[r] = self.data[r].count(0) == self.colCount - 1
+            self.rowProcessCount += 1
+        return self.rowData[r]
+    def colHasSingleNoneZero(self, c):
+        if self.colData[c] == None:
+            self.colData[c] = sum(1 for r in range(self.rowCount) if self.data[r][c]!=0) == 1
+            self.colProcessCount += 1
+        return self.colData[c]
+    def rcProcessCount(self):
+        return self.rowProcessCount + self.colProcessCount
 
 import unittest
 
 class TestCntSP(unittest.TestCase):
     def test(self):
-        for otpt, inpt in {
-                1: [ [1, 0, 0],
-                   [0, 0, 1],
-                   [1, 0, 0],
-                 ],
-                3: [ [1, 0, 0],
-                   [0, 1, 0],
-                   [0, 0, 1],
-                 ],
-        }.items():
-            self.assertEqual(cntSP(inpt),otpt)
+        for inpt, otpt in {
+                (
+                    (1, 0, 0),
+                    (0, 0, 1),
+                    (1, 0, 0),
+                    ): 1,
+                (
+                    (1, 0, 0),
+                    (0, 1, 0),
+                    (0, 0, 1),
+                    ): 3,
+                (
+                    (1, 1, 1),
+                    (1, 1, 1),
+                    (1, 1, 1),
+                    ): 0,
+                (
+                    (0, 0, 0),
+                    (0, 0, 0),
+                    (0, 0, 0),
+                    ): 0,
+                (
+                    (0, 0, 0),
+                    (0, 1, 0),
+                    (0, 0, 0),
+                    ): 1,
+                }.items():
+            print(inpt)
+            mtx = Matrix(inpt)
+            print(Matrix(inpt).specialPoint)
+            print(Matrix(inpt).rcProcessCount())
+            self.assertEqual(mtx.specialPointCount,otpt)
 
 unittest.main()

@@ -50,85 +50,107 @@ import (
 
 type row []int
 
-func (rw row) hasOneAndZeroes() bool {
-	var cnt1, cntNot01 int
-	for _, v := range rw {
-		if v == 1 {
-			cnt1++
-			if cnt1 > 1 {
-				return false
-			}
-		} else if v != 0 {
-			cntNot01++
-			if cntNot01 > 0 {
-				return false
+type rows []row
+
+type matrix struct {
+	rows               rows
+	rowCount, colCount int
+	rowColData         map[int]bool
+	rowColProcessCount int
+	specialPoint       [][2]int
+	specialPointCount  int
+}
+
+func newMatrix(rws rows) matrix {
+	mtx := matrix{
+		rows:       rws,
+		rowCount:   len(rws),
+		colCount:   len(rws[0]),
+		rowColData: make(map[int]bool),
+	}
+	mtx.process()
+	return mtx
+}
+
+func (mtx *matrix) process() {
+	for r := range mtx.rowCount {
+		for c := range mtx.colCount {
+			if mtx.rows[r][c] == 1 && mtx.hasZeroCross(r, c) {
+				mtx.specialPoint = append(mtx.specialPoint, [2]int{r, c})
 			}
 		}
 	}
-	if cnt1 == 0 {
-		return false
-	}
-	return true
+	mtx.specialPointCount = len(mtx.specialPoint)
 }
 
-type matrix []row
-
-func (mtx matrix) cross(r, c int) [2]row {
-	h := mtx[r]
-	l := len(mtx)
-	v := make(row, l)
-	for i := range l {
-		v[i] = mtx[i][c]
-	}
-	return [2]row{h, v}
-}
-
-func (mtx matrix) isSP(r, c int) bool {
-	if mtx[r][c] != 1 {
-		return false
-	}
-	for _, v := range mtx.cross(r, c) {
-		if !v.hasOneAndZeroes() {
+func (mtx *matrix) hasZeroCross(r, c int) bool {
+	var (
+		l, k, v int
+		ok      bool
+	)
+	for _, k = range [2]int{-r - 1, c + 1} {
+		_, ok = mtx.rowColData[k]
+		if !ok {
+			mtx.rowColProcessCount++
+			if k < 0 {
+				l = mtx.colCount
+				for v = range l {
+					if mtx.rows[r][v] == 0 {
+						l--
+					}
+				}
+			} else {
+				l = mtx.rowCount
+				for v = range l {
+					if mtx.rows[v][c] == 0 {
+						l--
+					}
+				}
+			}
+			mtx.rowColData[k] = l == 1
+		}
+		if !mtx.rowColData[k] {
 			return false
 		}
 	}
 	return true
 }
-
-func (mtx matrix) countSP() int {
-	count := 0
-	m := len(mtx)
-	n := mtx[0]
-	for r := range m {
-		for c := range n {
-			if mtx.isSP(r, c) {
-				count++
-			}
-		}
-	}
-	return count
-}
-
 func main() {
 	for _, data := range []struct {
-		input  matrix
+		input  rows
 		output int
 	}{
 		{
-			matrix{
+			rows{
 				row{1, 0, 0},
 				row{0, 0, 1},
 				row{1, 0, 0},
 			}, 1,
 		},
 		{
-			matrix{
+			rows{
 				row{1, 0, 0},
 				row{0, 1, 0},
 				row{0, 0, 1},
 			}, 3,
 		},
+		{
+			rows{
+				row{1, 1, 1},
+				row{1, 1, 1},
+				row{1, 1, 1},
+			}, 0,
+		},
+		{
+			rows{
+				row{0, 0, 0},
+				row{0, 0, 0},
+				row{0, 0, 0},
+			}, 0,
+		},
 	} {
-		io.WriteString(os.Stdout, cmp.Diff(data.input.countSP(), data.output)) // blank if ok, otherwise show the difference
+		mtx := newMatrix(data.input)
+		//fmt.Println(data.output, mtx.rows, mtx.specialPointCount, mtx.specialPoint, mtx.rowColProcessCount, mtx.rowColData)
+		io.WriteString(os.Stdout, cmp.Diff(mtx.specialPointCount, data.output)) // blank if ok, otherwise show the difference
 	}
 }
