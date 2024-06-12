@@ -46,8 +46,11 @@ Task 2: B After A
 ### solution by pokgopun@gmail.com
 
 def poc(string, char):
+    return int(0.5 + 100 * string.count(char)/len(string))
+    '''
     res = 1000 * string.count(char) / len(string)
     return res // 10 if res % 10 < 5 else 1 + res // 10
+    '''
 
 import unittest
 

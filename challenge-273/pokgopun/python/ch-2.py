@@ -40,10 +40,10 @@ SO WHAT DO YOU THINK ?
 ### solution by pokgopun@gmail.com
 
 def bAfterA(string):
-    i = string.find("b")
-    if i == -1:
-        return False
-    return string[i+1:].find("a") == -1
+    for i in range(len(string)):
+        if string[i] == "b":
+            return "a" not in string[i+1:]
+    return False
 
 import unittest
 
