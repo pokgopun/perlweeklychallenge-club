@@ -49,14 +49,17 @@ import (
 )
 
 func aAfterB(str string) bool {
-	for i, v := range str {
-		if v == 'b' {
-			for _, c := range str[i+1:] {
-				if c == 'a' {
+	l := len(str)
+	for i := range l {
+		if str[i] == 'b' {
+			i++
+			for l > i {
+				l--
+				if str[i] == 'a' {
 					return false
 				}
-				return true
 			}
+			return true
 		}
 	}
 	return false

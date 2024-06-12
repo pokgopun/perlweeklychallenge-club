@@ -55,17 +55,13 @@ import (
 )
 
 func poc(str string, chr rune) int {
-	res := 0
+	var f float32
 	for _, v := range str {
 		if v == chr {
-			res++
+			f++
 		}
 	}
-	res = 1000 * res / len(str)
-	if res%10 < 5 {
-		return res / 10
-	}
-	return 1 + res/10
+	return int(0.5 + 100*f/float32(len(str)))
 }
 
 func main() {
