@@ -39,9 +39,9 @@ Task 2: Bus Route
 ### solution by pokgopun@gmail.com
 
 def goatLatin(sentence: str):
-    ws = [ e + "m" if e[0] in "aeiouAEIOU" else e[1:] + e[0] + "m" for e in sentence.split()]
+    ws = [ e if e[0] in "aeiouAEIOU" else e[1:] + e[0] for e in sentence.split()]
     return " ".join(
-            ws[i]+"a"*(i+2) for i in range(len(ws))
+            ws[i] + "m" + "a" * (i+2) for i in range(len(ws))
             )
 
 import unittest
