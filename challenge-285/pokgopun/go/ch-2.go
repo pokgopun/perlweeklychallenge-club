@@ -55,64 +55,97 @@ package main
 import (
 	"fmt"
 	"io"
+	"iter"
 	"os"
-	"strconv"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-type money int
-
-const (
-	penny   money = 1
-	nickel  money = 5
-	dime    money = 10
-	quarter money = 25
-	half    money = 50
-)
-
-var coins = [5]money{half, quarter, dime, nickel, penny}
-
-type pocket struct {
-	a money
-	c [5]int
-	l int
-	n int
+type Coiner struct {
+	ch       chan [5]uint
+	cns, cnt [5]uint
+	cni, val uint
+	vbs      bool
+	n        *uint
+	done     chan struct{}
+	//done1    chan struct{}
 }
 
-func (pk pocket) coining() int {
-	if pk.l == 4 {
-		///* uncomment to see configurations of coins
-		pk.c[4] = int(pk.a)
-		fmt.Println(pk.c)
-		//*/
-		return 1
-	}
-	for n := range int(pk.a/coins[pk.l]) + 1 {
-		p := pk
-		p.c[p.l] = n
-		p.a -= coins[p.l] * money(n)
-		p.l += 1
-		p.n = 0 // handle with care
-		pk.n += p.coining()
-	}
-	return pk.n
+func NewCoiner() Coiner {
+	var n uint
+	return Coiner{cns: [5]uint{50, 25, 10, 5, 1}, n: &n}
 }
 
-func coiner(n money) int {
-	return pocket{a: n}.coining()
+func (cn Coiner) Count(val uint) uint {
+	cn.val = val
+	*cn.n = 0
+	cn.process()
+	return *cn.n
+}
+
+func (cn Coiner) List(val uint) iter.Seq[[5]uint] {
+	cn.val = val
+	*cn.n = 0
+	cn.ch = make(chan [5]uint)
+	cn.done = make(chan struct{})
+	//cn.done1 = make(chan struct{})
+	cn.vbs = true
+	go func() {
+		cn.process()
+		close(cn.ch)
+		//fmt.Println("go routine completed")
+		//exec.Command("touch", strconv.Itoa(int(*cn.n))).Run()
+		//close(cn.done1) // enable this to allow yield to wait for go routine to finish before exit
+
+	}()
+	return func(yield func([5]uint) bool) {
+		for v := range cn.ch {
+			if !yield(v) {
+				close(cn.done) // clean-up the recursive function (i.e. Coiner.process())
+				//<-cn.done1     // enable this to allow yield to wait for go routine to finish before exit
+				//time.Sleep(1 * time.Millisecond)
+				//fmt.Println("count after partial list:", *cn.n)
+				return
+			}
+		}
+		//fmt.Println("count after complete list:", *cn.n)
+	}
+}
+
+func (cn Coiner) process() {
+	if cn.cni == 4 {
+		*cn.n += 1
+		if cn.vbs {
+			cn.cnt[4] = cn.val
+			select {
+			case cn.ch <- cn.cnt:
+			case <-cn.done:
+			}
+		}
+	} else {
+		for n := range cn.val/cn.cns[cn.cni] + 1 {
+			c := cn // make a copy of coiner
+			c.cnt[c.cni] = n
+			c.val -= c.cns[c.cni] * n
+			c.cni += 1
+			c.process()
+		}
+	}
 }
 
 func main() {
+	cn := NewCoiner()
+
 	for _, data := range []struct {
-		input  money
-		output int
+		input, output uint
 	}{
 		{9, 2},
 		{15, 6},
 		{100, 292},
 	} {
-		io.WriteString(os.Stdout, strconv.Itoa(int(data.input))+", "+strconv.Itoa(int(data.output))+"\n")
-		io.WriteString(os.Stdout, cmp.Diff(coiner(data.input), data.output)) // blank if ok, otherwise show the difference
+		io.WriteString(os.Stdout, cmp.Diff(cn.Count(data.input), data.output)) // blank if ok, otherwise show the difference
+	}
+	for v := range cn.List(15) {
+		fmt.Println(v)
 	}
 }
