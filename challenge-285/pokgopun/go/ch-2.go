@@ -53,32 +53,66 @@ SO WHAT DO YOU THINK ?
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func mc(a int) int {
-	c := 0
-	for c50 := range a/50 + 1 {
-		for c25 := range (a-50*c50)/25 + 1 {
-			for c10 := range (a-50*c50-25*c25)/10 + 1 {
-				c += (a-50*c50-25*c25-10*c10)/5 + 1
-			}
-		}
+type money int
+
+const (
+	penny   money = 1
+	nickel  money = 5
+	dime    money = 10
+	quarter money = 25
+	half    money = 50
+)
+
+var coins = [5]money{half, quarter, dime, nickel, penny}
+
+type pocket struct {
+	a money
+	c [5]int
+	l int
+	n int
+}
+
+func (pk pocket) coining() int {
+	if pk.l == 4 {
+		///* uncomment to see configurations of coins
+		pk.c[4] = int(pk.a)
+		fmt.Println(pk.c)
+		//*/
+		return 1
 	}
-	return c
+	for n := range int(pk.a/coins[pk.l]) + 1 {
+		p := pk
+		p.c[p.l] = n
+		p.a -= coins[p.l] * money(n)
+		p.l += 1
+		p.n = 0 // handle with care
+		pk.n += p.coining()
+	}
+	return pk.n
+}
+
+func coiner(n money) int {
+	return pocket{a: n}.coining()
 }
 
 func main() {
 	for _, data := range []struct {
-		input, output int
+		input  money
+		output int
 	}{
 		{9, 2},
 		{15, 6},
 		{100, 292},
 	} {
-		io.WriteString(os.Stdout, cmp.Diff(mc(data.input), data.output)) // blank if ok, otherwise show the difference
+		io.WriteString(os.Stdout, strconv.Itoa(int(data.input))+", "+strconv.Itoa(int(data.output))+"\n")
+		io.WriteString(os.Stdout, cmp.Diff(coiner(data.input), data.output)) // blank if ok, otherwise show the difference
 	}
 }
