@@ -61,21 +61,25 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// struct to be processed by a recursive method to yield combinations of coin settings for given amount of money
 type Coiner struct {
-	ch       chan [5]uint
-	cns, cnt [5]uint
-	cni, val uint
-	vbs      bool
-	n        *uint
-	done     chan struct{}
-	//done1    chan struct{}
+	ch       chan [5]uint  // a channel to received a result from the recursive method
+	cns, cnt [5]uint       // coin values and their counts, five of them for half-dollar, quarter, dime, nickel, penny
+	cni      uint          // current coin index to allow the recursive method to progress through the coins
+	val      uint          // value of money given to exchange for the coins in unit of penny
+	vbs      bool          // option to enable the recursive method to output coin combinations addition to the configuration counts
+	n        *uint         // counts of all possible coin combinations for a given amount of money, to be updated by recursive method
+	done     chan struct{} // a channel to release the recursive method from writing result for possible coin combinations
+	//done1    chan struct{} // temporary channel to allow range-over-func to wait for completion of goroutine before exit
 }
 
+// intialize with combination counts with zero and coin values for half-dollar, quarter, dime, nickel and penny
 func NewCoiner() Coiner {
 	var n uint
 	return Coiner{cns: [5]uint{50, 25, 10, 5, 1}, n: &n}
 }
 
+// caculate counts of all possible coin combinations (cn.n) for given amount of money (val), it uses "process" method
 func (cn Coiner) Count(val uint) uint {
 	cn.val = val
 	*cn.n = 0
@@ -83,22 +87,23 @@ func (cn Coiner) Count(val uint) uint {
 	return *cn.n
 }
 
-func (cn Coiner) List(val uint) iter.Seq[[5]uint] {
+// generate all possible coin combinations for given amount of money, it uses the "progress" method with the struct field "vbs" toggled
+func (cn Coiner) List(val uint) iter.Seq[[5]uint] { // use iter.Seq output the result from channel, take care of goroutine if early exit
 	cn.val = val
 	*cn.n = 0
 	cn.ch = make(chan [5]uint)
 	cn.done = make(chan struct{})
 	//cn.done1 = make(chan struct{})
 	cn.vbs = true
-	go func() {
-		cn.process()
-		close(cn.ch)
-		//fmt.Println("go routine completed")
-		//exec.Command("touch", strconv.Itoa(int(*cn.n))).Run()
-		//close(cn.done1) // enable this to allow yield to wait for go routine to finish before exit
-
-	}()
 	return func(yield func([5]uint) bool) {
+		go func() {
+			cn.process()
+			close(cn.ch)
+			//fmt.Println("go routine completed")
+			//exec.Command("touch", strconv.Itoa(int(*cn.n))).Run()
+			//close(cn.done1) // enable this to allow yield to wait for go routine to finish before exit
+
+		}()
 		for v := range cn.ch {
 			if !yield(v) {
 				close(cn.done) // clean-up the recursive function (i.e. Coiner.process())
@@ -112,22 +117,23 @@ func (cn Coiner) List(val uint) iter.Seq[[5]uint] {
 	}
 }
 
+// recursive method to generate all possible coin combinations, take the struct to use its fields for processing and store results
 func (cn Coiner) process() {
-	if cn.cni == 4 {
-		*cn.n += 1
-		if cn.vbs {
-			cn.cnt[4] = cn.val
-			select {
+	if cn.cni == 4 { // if recurive through coin-index-4 (i.e. the fith coin "penny") which is the smallest unit, output the result
+		*cn.n += 1  // update count of coin combiations
+		if cn.vbs { // struct field to toggle outputing coin combination
+			cn.cnt[4] = cn.val // number of penny coin is just the remaining amount after exchange for all other coins
+			select {           // allow the recursive function to be released if iter.Seq exit early
 			case cn.ch <- cn.cnt:
 			case <-cn.done:
 			}
 		}
 	} else {
-		for n := range cn.val/cn.cns[cn.cni] + 1 {
-			c := cn // make a copy of coiner
-			c.cnt[c.cni] = n
-			c.val -= c.cns[c.cni] * n
-			c.cni += 1
+		for n := range cn.val/cn.cns[cn.cni] + 1 { // loop all possible number of current coin and recursive for next coin
+			c := cn                   // make a copy of coiner for recursive the next coin
+			c.cnt[c.cni] = n          // add counts for the current coin
+			c.val -= c.cns[c.cni] * n // deduct amount of money in exchanging for the number of current coin
+			c.cni += 1                // increase coin index to allow the next recursive to process the next coin in line
 			c.process()
 		}
 	}
