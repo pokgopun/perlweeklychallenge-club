@@ -82,6 +82,22 @@ type position struct {
 	r, c int
 }
 
+type positions []position
+
+func (ps positions) common(p positions) positions {
+	m := make(map[position]int)
+	var r positions
+	for _, pos := range [2]positions{ps, p} {
+		for _, v := range pos {
+			m[v]++
+			if m[v] == 2 {
+				r = append(r, v)
+			}
+		}
+	}
+	return r
+}
+
 type block struct {
 	mark      rune
 	positions []position
@@ -95,11 +111,14 @@ type blocks struct {
 
 func newBlocks(rws rows) blocks {
 	bs := blocks{pos2mark: make(map[position]rune)}
+	size := 0
 	for r, rw := range rws {
 		for c, v := range rw {
+			size++
 			bs.pos2mark[position{r, c}] = v
 		}
 	}
+	//fmt.Println("size =", size)
 	var (
 		pos  position
 		mark rune
@@ -111,9 +130,36 @@ func newBlocks(rws rows) blocks {
 		delete(bs.pos2mark, pos)
 		b := block{mark, []position{pos}}
 		bs.vals = append(bs.vals, &b)
-		bs.largest = max(bs.largest, bs.process(&b, pos, 1))
+		//bs.largest = max(bs.largest, bs.process(&b, pos, 1))
+		// replace recursive bs.process() with bs.cluster() that employ queue and size to safeguard infinite loop
+		queue := []position{pos}
+		cnt := 0
+		for len(queue) > 0 && size > cnt {
+			//fmt.Println(string(b.mark), len(bs.pos2mark), len(queue), queue, len(b.positions), b.positions)
+			cnt++
+			bs.cluster(&b, &queue)
+		}
+		bs.largest = max(bs.largest, cnt)
 	}
 	return bs
+}
+
+func (bs blocks) cluster(b *block, queue *[]position) {
+	pos := (*queue)[0]
+	*queue = (*queue)[1:]
+	for _, o := range [4][2]int{
+		[2]int{0, 1},
+		[2]int{1, 0},
+		[2]int{-1, 0},
+		[2]int{0, -1},
+	} {
+		p := position{pos.r + o[0], pos.c + o[1]}
+		if bs.pos2mark[p] == b.mark {
+			delete(bs.pos2mark, p)
+			b.positions = append(b.positions, p)
+			*queue = append(*queue, p)
+		}
+	}
 }
 
 func (bs blocks) process(b *block, pos position, cnt int) int {
