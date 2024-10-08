@@ -91,16 +91,34 @@ class Blocks:
         self.vals: List[Block] = []
         self.largest = 0
         self.pos2mark: Dict[Position,str] = dict()
+        size = 0
         for r in range(len(matrix)):
             row = matrix[r]
             for c in range(len(row)):
+                size += 1
                 self.pos2mark[Position(r,c)] = row[c]
         while len(self.pos2mark) > 0:
             pos,mark = self.pos2mark.popitem()
             block = Block(mark,[pos])
-            self.largest = max(self.largest, self.process(block, pos, 1))
             self.vals.append(block)
+            #self.largest = max(self.largest, self.process(block, pos, 1))
+            ### replace recursive self.process with queue and self.cluster with size as saveguard infinite loop
+            queue = [pos]
+            cnt = 0
+            while len(queue) > 0 and size > cnt:
+                #print(size,mark,len(self.pos2mark),len(queue),queue,len(block.positions),block.positions)
+                cnt += 1
+                self.cluster(block,queue)
+            self.largest = max(self.largest,cnt)
         #print(self.vals)
+    def cluster(self,block: Block,queue: List[Position]):
+        pos = queue.pop()
+        for o in ((0,1),(1,0),(-1,0),(0,-1)):
+            p = Position(pos.r+o[0],pos.c+o[1])
+            if self.pos2mark.get(p) == block.mark:
+                self.pos2mark.pop(p)
+                block.positions.append(p)
+                queue.append(p)
     def process(self,block: Block,pos: Position, cnt: int) -> int:
         for o in ((0,1),(1,0),(-1,0),(0,-1)):
             p = Position(pos.r+o[0],pos.c+o[1])
