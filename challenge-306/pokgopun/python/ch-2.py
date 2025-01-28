@@ -56,18 +56,12 @@ def lstelm(ints: Tuple[int]) -> int:
                 return 0
             case 1:
                 return lst[0]
-            case 2:
-                pass
-            case _:
-                lst.sort()
-        d = lst[-2] - lst[-1]
-        if d == 0:
+        lst.sort()
+        if lst[-1] == lst[-2]:
             lst = lst[:-2]
-            continue
-        if d < 0:
-            d *= -1
-        lst[-2] = d
-        lst = lst[:-1]
+        else:
+            lst[-2] = lst[-1] - lst[-2]
+            lst = lst[:-1]
 
 import unittest
 
