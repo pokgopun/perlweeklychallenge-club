@@ -29,14 +29,16 @@ Task 2: Sort Odd Even
 """
 ### solution by pokgopun@gmail.com
 
+from itertools import chain
+
 def ai(tup: tuple[tuple[int]]) -> tuple[int]:
     l = len(tup)
-    t =  tup[0]
-    for e in tup[1:]:
-        t = t + e
-    return tuple(
-            e for e in set(t) if t.count(e) == l
-            )
+    if l == 0:
+        return tuple()
+    t = set(tup[0])
+    for tr in tup[1:]:
+        t.intersection_update(set(tr))
+    return tuple(t)
 
 import unittest
 
