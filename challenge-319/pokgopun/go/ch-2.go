@@ -65,6 +65,7 @@ func (in input) process() int {
 		if _, ok := m[v]; ok {
 			if mn == -1 || mn > v {
 				mn = v
+				delete(m, v)
 			}
 		}
 	}
