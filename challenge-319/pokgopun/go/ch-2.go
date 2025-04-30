@@ -56,16 +56,11 @@ type input struct {
 }
 
 func (in input) process() int {
-	m := make(map[int]int)
 	mn := -1
-	for _, v := range in.arr1 {
-		m[v]++
-	}
-	for _, v := range in.arr2 {
-		if _, ok := m[v]; ok {
-			if mn == -1 || mn > v {
-				mn = v
-				delete(m, v)
+	for _, v1 := range in.arr1 {
+		for _, v2 := range in.arr2 {
+			if v1 == v2 && (mn == -1 || mn > v1) {
+				mn = v1
 			}
 		}
 	}
