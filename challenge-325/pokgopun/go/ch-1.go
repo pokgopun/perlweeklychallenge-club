@@ -34,19 +34,17 @@ package main
 
 import (
 	"io"
+	"iter"
 	"os"
+	"slices"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-type ints []int
-
-func (in ints) process() int {
-	var c, mx int
-	n := len(in)
-	for n > 0 {
-		n--
-		if in[n] == 0 {
+func co(ints iter.Seq[int]) int {
+	var c, mx, v int
+	for v = range ints {
+		if v == 0 {
 			if c == 0 {
 				continue
 			}
@@ -54,18 +52,14 @@ func (in ints) process() int {
 				//fmt.Printf("mx = %d\n", c)
 				mx = c
 			}
-			if n > 0 && n <= mx {
-				//fmt.Printf("remaining %d cannot exceed max %d\n", n, mx)
-				break
-			}
 			c = 0
 		} else {
 			c++
 		}
 	}
-	if n == 0 && in[n] > 0 {
+	if v > 0 {
 		//fmt.Println("final max update")
-		if mx < c {
+		if c > mx {
 			//fmt.Printf("mx = %d\n", c)
 			mx = c
 		}
@@ -75,19 +69,19 @@ func (in ints) process() int {
 
 func main() {
 	for _, data := range []struct {
-		input  ints
+		input  iter.Seq[int]
 		output int
 	}{
-		{ints{0, 1, 1, 0, 1, 1, 1}, 3},
-		{ints{0, 0, 0, 0}, 0},
-		{ints{1, 0, 1, 0, 1, 1}, 2},
-		{ints{1, 0, 1, 1, 0, 1, 1}, 2},
-		{ints{1, 0, 1, 1, 0, 0, 1, 1}, 2},
-		{ints{0, 1, 1, 1, 0, 1, 1, 1}, 3},
-		{ints{1, 1, 1, 1, 0, 1, 1, 1, 0}, 4},
-		{ints{0, 1, 1, 0, 0, 1, 1, 1, 0}, 3},
+		{slices.Values([]int{0, 1, 1, 0, 1, 1, 1}), 3},
+		{slices.Values([]int{0, 0, 0, 0}), 0},
+		{slices.Values([]int{1, 0, 1, 0, 1, 1}), 2},
+		{slices.Values([]int{1, 0, 1, 1, 0, 1, 1}), 2},
+		{slices.Values([]int{1, 0, 1, 1, 0, 0, 1, 1}), 2},
+		{slices.Values([]int{0, 1, 1, 1, 0, 1, 1, 1}), 3},
+		{slices.Values([]int{1, 1, 1, 1, 0, 1, 1, 1, 0}), 4},
+		{slices.Values([]int{0, 1, 1, 0, 0, 1, 1, 1, 0}), 3},
 	} {
 		//fmt.Println(data)
-		io.WriteString(os.Stdout, cmp.Diff(data.input.process(), data.output)) // blank if ok, otherwise show the difference
+		io.WriteString(os.Stdout, cmp.Diff(co(data.input), data.output)) // blank if ok, otherwise show the difference
 	}
 }
