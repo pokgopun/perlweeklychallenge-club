@@ -32,17 +32,10 @@ Task 2: Decompressed List
 """
 ### solution by pokgopun@gmail.com
 
-def doy(date: str) -> int:
-    y, m, d = (int(e) for e in date.split('-'))
-    return d + 30*(m-1) + sum((e-7*(e//8))%2 for e in range(1,m)) - (m>2)*(2 - ilp(y))  
+from time import strptime
 
-def ilp(y: int) -> bool:
-    if y % 4 == 0:
-        if y % 100 == 0:
-            return y % 400 == 0
-        else:
-            return True
-    return False
+def doy(date: str) -> int:
+    return strptime(date, "%Y-%m-%d").tm_yday
 
 import unittest
 
