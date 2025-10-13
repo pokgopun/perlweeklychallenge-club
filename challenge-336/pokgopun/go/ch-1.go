@@ -52,20 +52,21 @@ Task 2: Final Score
 package main
 
 import (
-	"github.com/google/go-cmp/cmp"
 	"io"
 	"os"
 	"slices"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type ints []int
 
 func (in ints) process() bool {
-	slices.Sort(in)
 	l := len(in)
 	if l < 2 {
 		return false
 	}
+	slices.Sort(in)
 	var res bool
 	for d := 2; d <= l; d++ {
 		if l%d != 0 {
