@@ -291,20 +291,48 @@ SO WHAT DO YOU THINK ?
 """
 ### solution by pokgopun@gmail.com
 
+def levelizeK(l: int, k: int) -> int:
+    k %= l
+    match k:
+        case k if k < 0:
+            ko = l + k
+            if -k > ko:
+                k = ko
+        case k if k > 0:
+            ko = k - l
+            if k > -ko:
+                k = ko
+    return k
+
 def sg(mtx: tuple[list[int]], k: int) -> tuple[list[int]]:
     n = len(mtx[0])
     l = n * len(mtx)
-    k %= l
-    lst: list[int] = []
-    for i in range(l-k,l):
-        lst.append(mtx[i//n][i%n])
+    k = levelizeK(l, k)
+    if k == 0:
+        return mtx
+    step = 1
+    if k < 0:
+        k = -k
+        step = -1
+    s: list[int] = []
+    off = l - k
+    o = step == 1 and off or 0
+    for i in range(0+o,k+o):
+        s.append(mtx[i//n][i%n])
     #print(lst)
-    for i in range(l-1,k-1,-1):
-        idx = i - k
+    start, end = off-1, 0
+    if step == -1:
+        start, end = end, start
+    i = start
+    while i != end - step:
+        idx = i + k
         #print(i,idx)
-        mtx[i//n][i%n] = mtx[idx//n][idx%n]
+        mtx[i//n][i%n], mtx[idx//n][idx%n] = mtx[idx//n][idx%n], mtx[i//n][i%n]
+        i -= step
+    o = step == -1 and off or 0
     for i in range(k):
-        mtx[i//n][i%n] = lst[i]
+        idx = i + o
+        mtx[idx//n][idx%n] = s[i]
     return mtx
 
 import unittest

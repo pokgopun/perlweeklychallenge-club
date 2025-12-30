@@ -304,24 +304,85 @@ type row []int
 
 type rows []row
 
+func newRows(rw ...row) rows {
+	l := len(rw)
+	if l == 0 {
+		return nil
+	}
+	l = len(rw[0])
+	if l == 0 {
+		return nil
+	}
+	for _, v := range rw[1:] {
+		if len(v) != l {
+			return nil
+		}
+	}
+	return rows(rw)
+}
+
+func levelizeK(l, k int) int {
+	k %= l
+	switch {
+	case k < 0:
+		ko := l + k
+		if -k > ko {
+			k = ko
+		}
+	case k > 0:
+		ko := k - l
+		if k > -ko {
+			k = ko
+		}
+	}
+	return k
+}
+
 func (rs rows) process(k int) rows {
+	if rs == nil {
+		return nil
+	}
 	n := len(rs[0])
 	l := n * len(rs)
-	k %= l
+	k = levelizeK(l, k)
+	if k == 0 {
+		return rs
+	}
+	step := 1
+	if k < 0 {
+		k = -k
+		step = -1
+	}
 	s := make([]int, k)
-	for i := range k {
-		idx := l - k + i
-		s[i] = rs[idx/n][idx%n]
-	}
-	//fmt.Println(s)
-	for i := l - 1; i >= k; i-- {
-		idx := i - k
-		//fmt.Println(i, idx)
-		rs[i/n][i%n] = rs[idx/n][idx%n]
-	}
-	//fmt.Println(rs)
-	for i, v := range s {
-		rs[i/n][i%n] = v
+	off := l - k
+	{
+		var o int
+		if step == 1 {
+			o = off
+		}
+		for i := range k {
+			idx := i + o
+			s[i] = rs[idx/n][idx%n]
+		}
+		//fmt.Println(s)
+		start, end := off-1, 0
+		if step == -1 {
+			start, end = end, start
+		}
+		for i := start; i != end-step; i -= step {
+			idx := i + k
+			//fmt.Println(i, idx)
+			rs[i/n][i%n], rs[idx/n][idx%n] = rs[idx/n][idx%n], rs[i/n][i%n]
+		}
+		//fmt.Println(rs)
+		o = 0
+		if step == -1 {
+			o = off
+		}
+		for i := range k {
+			idx := i + o
+			rs[idx/n][idx%n] = s[i]
+		}
 	}
 	return rs
 }
@@ -332,12 +393,24 @@ func main() {
 		k   int
 		dst rows
 	}{
-		{rows{row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}}, 1, rows{row{9, 1, 2}, row{3, 4, 5}, row{6, 7, 8}}},
-		{rows{row{10, 20}, row{30, 40}}, 1, rows{row{40, 10}, row{20, 30}}},
-		{rows{row{1, 2}, row{3, 4}, row{5, 6}}, 1, rows{row{6, 1}, row{2, 3}, row{4, 5}}},
-		{rows{row{1, 2, 3}, row{4, 5, 6}}, 5, rows{row{2, 3, 4}, row{5, 6, 1}}},
-		{rows{row{1, 2, 3, 4}}, 1, rows{row{4, 1, 2, 3}}},
+		{newRows(row{0, 1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}), 1, nil},
+		{newRows(row{}, row{4, 5, 6}, row{7, 8, 9}), 1, nil},
+		{newRows(), 1, nil},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}), 9, rows{row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}}},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}), -9, rows{row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}}},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}), 0, rows{row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}}},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}), 1, rows{row{9, 1, 2}, row{3, 4, 5}, row{6, 7, 8}}},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}, row{7, 8, 9}), -8, rows{row{9, 1, 2}, row{3, 4, 5}, row{6, 7, 8}}},
+		{newRows(row{10, 20}, row{30, 40}), 1, rows{row{40, 10}, row{20, 30}}},
+		{newRows(row{10, 20}, row{30, 40}), -3, rows{row{40, 10}, row{20, 30}}},
+		{newRows(row{1, 2}, row{3, 4}, row{5, 6}), 1, rows{row{6, 1}, row{2, 3}, row{4, 5}}},
+		{newRows(row{1, 2}, row{3, 4}, row{5, 6}), -5, rows{row{6, 1}, row{2, 3}, row{4, 5}}},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}), 5, rows{row{2, 3, 4}, row{5, 6, 1}}},
+		{newRows(row{1, 2, 3}, row{4, 5, 6}), -1, rows{row{2, 3, 4}, row{5, 6, 1}}},
+		{newRows(row{1, 2, 3, 4}), 1, rows{row{4, 1, 2, 3}}},
+		{newRows(row{1, 2, 3, 4}), -3, rows{row{4, 1, 2, 3}}},
 	} {
+		//fmt.Println(data.src, data.k, data.dst)
 		io.WriteString(os.Stdout, cmp.Diff(data.src.process(data.k), data.dst)) // blank if ok, otherwise show the difference
 	}
 }

@@ -291,22 +291,55 @@ SO WHAT DO YOU THINK ?
 --]]
 --# solution by pokgopun@gmail.com
 
+--@param l int, k int
+local function levelizeK(l, k) --@return int
+	k = k % l
+	local ko
+	if k < 0 then
+		ko = l + k
+		if -k > ko then
+			k = ko
+		end
+	elseif k > 0 then
+		ko = k - l
+		if k > -ko then
+			k = ko
+		end
+	end
+	return k
+end
+
 --@param rows "table of table of int", k int
 local function sg(rows, k) --@return rows "table of table of int"
 	local n = #rows[1]
 	local l = n * #rows
-	k = k % l
+	k = levelizeK(l, k)
+	local step = 1
+	if k < 0 then
+		k = -k
+		step = -1
+	end
 	local s = {}
-	for i=l-k, l-1 do
+	local off = l - k
+	local o = step == 1 and off or 0
+	for i=0+o, k+o-1 do
 		table.insert(s,rows[(i//n)+1][(i%n)+1])
 	end
-	for i=l-1, k, -1 do
-		local idx = i - k
-		rows[(i//n)+1][(i%n)+1] = rows[(idx//n)+1][(idx%n)+1]
+	local start, stop = off-1, 0
+	if step == -1 then
+		start, stop = stop, start
 	end
-	for i, v in ipairs(s) do
-		local idx = i - 1
-		rows[(idx//n)+1][(idx%n)+1] = v
+	local i, idx
+	i = start
+	while i ~= stop - step do
+		idx = i + k
+		rows[(i//n)+1][(i%n)+1] , rows[(idx//n)+1][(idx%n)+1] = rows[(idx//n)+1][(idx%n)+1], rows[(i//n)+1][(i%n)+1]  
+		i = i - step
+	end
+	o = step == -1 and off or 0
+	for i=0, k-1 do
+		idx = i + o
+		rows[(idx//n)+1][(idx%n)+1] = s[i+1]
 	end
 	return rows
 end
