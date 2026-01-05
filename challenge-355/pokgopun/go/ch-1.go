@@ -44,7 +44,6 @@ package main
 import (
 	"io"
 	"os"
-	"strings"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -52,13 +51,13 @@ import (
 func ts(n int) string {
 	k := 1000
 	var (
-		b   strings.Builder
+		bs  []byte
 		pad bool
-		sep = ','
+		sep byte = 44
 	)
 	if n >= k {
-		b.WriteString(ts(n / k))
-		b.WriteRune(sep)
+		bs = []byte(ts(n / k))
+		bs = append(bs, sep)
 		n %= k
 		pad = true
 	}
@@ -68,15 +67,15 @@ func ts(n int) string {
 			break
 		}
 		if pad {
-			b.WriteRune('0')
+			bs = append(bs, 48)
 		}
 	}
 	for n > 0 {
-		b.WriteRune('0' + rune(n/k))
+		bs = append(bs, 48+byte(n/k))
 		n %= k
 		k /= 10
 	}
-	return b.String()
+	return string(bs)
 }
 
 func main() {
