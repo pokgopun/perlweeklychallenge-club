@@ -94,6 +94,7 @@ SO WHAT DO YOU THINK ?
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -101,36 +102,58 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-type match struct {
-	host, away int
-}
+type hostWins []bool
 
-type matches []match
-
-func (ms matches) winners(res string) []int {
-	var hwin, awin []int
-	for i, v := range res {
-		if v == 'H' {
-			hwin = append(hwin, ms[i].host)
-		} else {
-			awin = append([]int{ms[i].away}, awin...)
+func newHostWins(results string) hostWins {
+	hw := make(hostWins, len(results))
+	for i, v := range results {
+		switch v {
+		case 'H':
+			hw[i] = true
+		case 'A':
+		default:
+			return nil
 		}
 	}
-	return append(hwin, awin...)
+	return hw
 }
 
-func ww(result string) string {
-	ms := matches{match{2, 7}, match{3, 6}, match{4, 5}}
-	ws := ms.winners(result[:3])
-	ms = matches{match{1, ws[2]}, match{ws[0], ws[1]}}
-	ws = ms.winners(result[3:5])
+type match struct {
+	host, away int
+	hostWin    bool
+}
+
+func (m match) String() string {
 	var w, l int
-	if result[5] == 'H' {
-		w, l = ws[0], ws[1]
+	if m.hostWin {
+		w, l = m.host, m.away
 	} else {
-		w, l = ws[1], ws[0]
+		l, w = m.host, m.away
 	}
 	return "Team " + strconv.Itoa(w) + " defeated Team " + strconv.Itoa(l)
+}
+
+func winners(ms ...match) []int {
+	var hw, aw []int
+	for _, m := range ms {
+		if m.hostWin {
+			hw = append(hw, m.host)
+		} else {
+			aw = append([]int{m.away}, aw...)
+		}
+		io.WriteString(os.Stdout, m.String()+"\n")
+	}
+	return append(hw, aw...)
+}
+
+func whoWins(results string) string {
+	hw := newHostWins(results)
+	if hw == nil || len(hw) != 6 {
+		return ""
+	}
+	ws := winners(match{2, 7, hw[0]}, match{3, 6, hw[1]}, match{4, 5, hw[2]})
+	ws = winners(match{1, ws[2], hw[3]}, match{ws[0], ws[1], hw[4]})
+	return match{ws[0], ws[1], hw[5]}.String()
 }
 
 func main() {
@@ -143,6 +166,7 @@ func main() {
 		{"HAHAAH", "Team 4 defeated Team 6"},
 		{"HAAHAA", "Team 5 defeated Team 1"},
 	} {
-		io.WriteString(os.Stdout, cmp.Diff(ww(data.input), data.output)) // blank if ok, otherwise show the difference
+		fmt.Println(data)
+		io.WriteString(os.Stdout, cmp.Diff(whoWins(data.input), data.output)) // blank if ok, otherwise show the difference
 	}
 }
