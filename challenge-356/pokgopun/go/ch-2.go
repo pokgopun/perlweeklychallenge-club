@@ -94,33 +94,29 @@ SO WHAT DO YOU THINK ?
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"slices"
+	"strconv"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-type id int8
-
 type match struct {
-	host, away id
+	host, away int
 }
 
 type matches []match
 
-func (ms matches) winners(res string) []id {
-	ws := make([]id, len(ms))
+func (ms matches) winners(res string) []int {
+	var hwin, awin []int
 	for i, v := range res {
 		if v == 'H' {
-			ws[i] = ms[i].host
+			hwin = append(hwin, ms[i].host)
 		} else {
-			ws[i] = ms[i].away
+			awin = append([]int{ms[i].away}, awin...)
 		}
 	}
-	slices.Sort(ws)
-	return ws
+	return append(hwin, awin...)
 }
 
 func ww(result string) string {
@@ -128,13 +124,13 @@ func ww(result string) string {
 	ws := ms.winners(result[:3])
 	ms = matches{match{1, ws[2]}, match{ws[0], ws[1]}}
 	ws = ms.winners(result[3:5])
-	var w, l id
+	var w, l int
 	if result[5] == 'H' {
 		w, l = ws[0], ws[1]
 	} else {
 		w, l = ws[1], ws[0]
 	}
-	return fmt.Sprintf("Team %d defeated Team %d", w, l)
+	return "Team " + strconv.Itoa(w) + " defeated Team " + strconv.Itoa(l)
 }
 
 func main() {
