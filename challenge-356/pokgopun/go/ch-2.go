@@ -94,13 +94,14 @@ SO WHAT DO YOU THINK ?
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strconv"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+const debug = false
 
 type hostWins []bool
 
@@ -141,7 +142,9 @@ func winners(ms ...match) []int {
 		} else {
 			aw = append([]int{m.away}, aw...)
 		}
-		io.WriteString(os.Stdout, m.String()+"\n")
+		if debug {
+			io.WriteString(os.Stdout, m.String()+"\n")
+		}
 	}
 	return append(hw, aw...)
 }
@@ -153,7 +156,11 @@ func whoWins(results string) string {
 	}
 	ws := winners(match{2, 7, hw[0]}, match{3, 6, hw[1]}, match{4, 5, hw[2]})
 	ws = winners(match{1, ws[2], hw[3]}, match{ws[0], ws[1], hw[4]})
-	return match{ws[0], ws[1], hw[5]}.String()
+	final := match{ws[0], ws[1], hw[5]}.String()
+	if debug {
+		io.WriteString(os.Stdout, final+"\n")
+	}
+	return final
 }
 
 func main() {
@@ -166,7 +173,9 @@ func main() {
 		{"HAHAAH", "Team 4 defeated Team 6"},
 		{"HAAHAA", "Team 5 defeated Team 1"},
 	} {
-		fmt.Println(data)
+		if debug {
+			io.WriteString(os.Stdout, data.input+" => "+data.output+"\n")
+		}
 		io.WriteString(os.Stdout, cmp.Diff(whoWins(data.input), data.output)) // blank if ok, otherwise show the difference
 	}
 }
