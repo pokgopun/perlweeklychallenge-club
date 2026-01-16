@@ -51,17 +51,35 @@ Task 2: Who Wins
 """
 ### solution by pokgopun@gmail.com
 
-def ks(n: int) -> int:
+def ksGen(n: int) -> int:
     lst = [1,2,2]
-    t = 3
-    while n > len(lst):
-	    l = lst[t-1]
-	    e = 2 - (t % 2)
-	    for i in range(l):
-	        lst.append(e)
-	    t += 1
-    #print(n,":",lst,"=>",lst[:n])
-    return lst[:n].count(1)
+    i = 0
+    while i < 3:
+        v = lst.pop(0)
+        yield v
+        i += 1
+        if i == n:
+            return
+    t = i
+    while True:
+        l = v
+        e = 2 - (t % 2)
+        for j in range(l):
+            lst.append(e)
+            yield e
+            i += 1
+            if i == n:
+                return
+        t += 1
+        #print("lst =", lst, "t =", t, "i =", i)
+        v = lst.pop(0)
+
+def ks(n: int) -> int:
+    c = 0
+    for v in ksGen(n):
+        if v == 1:
+            c += 1
+    return c
 
 import unittest
 
