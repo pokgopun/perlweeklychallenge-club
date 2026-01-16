@@ -91,24 +91,35 @@ SO WHAT DO YOU THINK ?
 """
 ### solution by pokgopun@gmail.com
 
-def ww(result: str) -> str:
-    res = tuple(result)
-    r2i = {"H":0,"A":1}
-    w1 = [(2,7),(3,6),(4,5)]
-    idx = 0
-    for i in range(len(w1)):
-        w1[i] = w1[i][r2i[res[idx]]]
-        idx += 1
-    w1.sort()
-    w2 = [(1,w1[2]),(w1[0],w1[1])]
-    for i in range(len(w2)):
-        w2[i] = w2[i][r2i[res[idx]]]
-        idx += 1
-    w2.sort()
-    w,l = w2[0], w2[1]
-    if r2i[res[idx]]:
-        w, l = l, w
-    return f'Team {w} defeated Team {l}'
+debug = False
+
+class Match:
+    def __init__(self, host: int, away: int, res: str):
+        self.host = host
+        self.away = away
+        self.hostWin = res == 'H' and True or False
+    def __str__(self):
+        return f'Team {self.hostWin and self.host or self.away} defeated Team {self.hostWin and self.away or self.host}'
+
+def winners(*matches) -> tuple[int]:
+    hostWins: list[int] = []
+    awayWins: list[int] = []
+    for m in matches:
+        if debug:
+            print(m)
+        if m.hostWin:
+            hostWins.append(m.host)
+        else:
+            awayWins.insert(0, m.away)
+    return tuple(hostWins + awayWins)
+
+def whoWins(res: str) -> str:
+    ws = winners(Match(2, 7, res[0]), Match(3, 6, res[1]), Match(4, 5, res[2]))
+    ws = winners(Match(1, ws[2], res[3]), Match(ws[0], ws[1], res[4]))
+    final = Match(ws[0], ws[1], res[5])
+    if debug:
+        print(final)
+    return final.__str__()
 
 import unittest 
 
@@ -121,6 +132,8 @@ class TestWw(unittest.TestCase):
                            "HAHAAH": "Team 4 defeated Team 6",
                            "HAAHAA": "Team 5 defeated Team 1",
                            }.items():
-            self.assertEqual(ww(inpt),otpt)
+            if debug:
+                print(inpt, otpt)
+            self.assertEqual(whoWins(inpt),otpt)
 
 unittest.main()
