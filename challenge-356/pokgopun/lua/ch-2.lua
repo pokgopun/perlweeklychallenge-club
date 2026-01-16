@@ -90,33 +90,53 @@ Output: "Team 5 defeated Team 1"
 SO WHAT DO YOU THINK ?
 --]]
 --# solution by pokgopun@gmail.com
+
+local debug = false
+
+--@param host int, away int, res string
+local function match(host, away, res) --@return table
+	local hostWin = res == "H" and true or false
+	return {
+		host = host,
+		away = away,
+		hostWin = hostWin,
+		result = string.format("Team %d defeated Team %d", hostWin and host or away, hostWin and away or host),
+	}
+end
+
+--@param matches
+local function winners(...) --@return table
+	local victors, avictors = {}, {}
+	local m
+	for i=1, select("#", ...) do
+		m = select(i, ...)
+		if debug then
+			print(m.result)
+		end
+		if m.hostWin then
+			table.insert(victors, m.host)
+		else
+			table.insert(avictors, 1, m.away)
+		end
+	end
+	for _, v in ipairs(avictors) do
+		table.insert(victors, v)
+	end
+	return victors
+end
+
 --@param string
-local function ww(res) --@return string
-	local w1 = {{2,7},{3,6},{4,5}}
-	local idx = 1
-	for i, v in ipairs(w1) do
-		if res:sub(idx,idx) == 'H' then
-			w1[i] = v[1]
-		else
-			w1[i] = v[2]
-		end
-		idx = idx + 1
+local function ww(result) --@return string
+	local res = {}
+	string.gsub(result, ".", function(a) table.insert(res,a) end)
+	local ws = {}
+	ws = winners(match(2, 7, res[1]), match(3, 6, res[2]), match(4, 5, res[3]))
+	ws = winners(match(1, ws[3], res[4]), match(ws[1], ws[2], res[5]))
+	local final = match(ws[1], ws[2], res[6])
+	if debug then
+		print(final.result)
 	end
-	table.sort(w1)
-	local w2 = {{1,w1[3]},{w1[1],w1[2]}}
-	for i, v in ipairs(w2) do
-		if res:sub(idx,idx) == 'H' then
-			w2[i] = v[1]
-		else
-			w2[i] = v[2]
-		end
-		idx = idx + 1
-	end
-	table.sort(w2)
-	if res:sub(6,6) == 'A' then
-		w2[1], w2[2] = w2[2], w2[1]
-	end
-	return string.format("Team %d defeated Team %d", w2[1], w2[2])
+	return final.result
 end
 
 local lu = require("luaunit")
@@ -131,6 +151,9 @@ function TestWw()
 	}
 	for i=2, #data, 2 do
 		local inpt, otpt = data[i-1], data[i]
+		if debug then
+			print(inpt, otpt)
+		end
 		lu.assertEquals(ww(inpt),otpt)
 	end
 end
