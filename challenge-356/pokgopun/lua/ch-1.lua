@@ -52,25 +52,44 @@ Task 2: Who Wins
 --# solution by pokgopun@gmail.com
 
 --@param n int
-local function ks(n) --@return int
+local function ksCo(n) --@yield int
 	local s = {1,2,2}
-	local c = 1
-	local t = #s
-	local m = n - t
-	while m > 0 do
-		local e = 2 - (t % 2)
-		for i=1, s[t] do
+	local i = 0
+	local v
+	while i < 3 do
+		v = s[1]
+		coroutine.yield(v)
+		i = i + 1
+		if i == n then
+			return
+		end
+		table.remove(s,1)
+	end
+	local t, e
+	t = i
+	while i < n do
+		e = 2 - (t % 2)
+		for j=1, v do
+			coroutine.yield(e)
+			i = i + 1
+			if i == n then
+				return
+			end
 			table.insert(s,e)
-			--print(table.concat(s," "))
-			if e == 1 then
-				c = c + 1
-			end
-			m = m - 1
-			if m == 0 then
-				return c
-			end
 		end
 		t = t + 1
+		v = s[1]
+		table.remove(s,1)
+	end
+end
+
+--@param n int
+local function ks(n) --@return int
+	local c = 0
+	for v in coroutine.wrap(function() ksCo(n) end) do
+		if v == 1 then
+			c = c + 1
+		end
 	end
 	return c
 end
