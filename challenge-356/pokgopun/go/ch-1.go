@@ -55,35 +55,86 @@ package main
 
 import (
 	"io"
+	"iter"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func ks(n int) int {
-	s := []int{1, 2, 2}
-	t := len(s)
-	c := 1
-	m := n - t
-	for m > 0 {
-		l := s[t-1]
-		e := 2 - (t % 2)
-		for l > 0 {
-			s = append(s, e)
-			l--
-			if e == 1 {
-				c++
+func kSeq(n int) iter.Seq[int] {
+	return func(yield func(int) bool) {
+		s := []int{1, 2, 2}
+		var i, v, t, l, e int
+		for i < 3 {
+			v = s[0]
+			if !yield(v) {
+				return
 			}
-			m--
-			if m == 0 {
-				return c
+			i++
+			if i == n {
+				return
 			}
+			s = s[1:]
 		}
-		t++
+		t = i
+		for i < n {
+			l = v
+			e = 2 - (t % 2)
+			for l > 0 {
+				if !yield(e) {
+					return
+				}
+				l--
+				i++
+				if i == n {
+					return
+				}
+				s = append(s, e)
+			}
+			t++
+			//fmt.Println("s =", s, "t =", t, "i =", i)
+			v = s[0]
+			s = s[1:]
+		}
+	}
+}
+
+func ks(n int) int {
+	//fmt.Println("n =", n)
+	c := 0
+	for v := range kSeq(n) {
+		if v == 1 {
+			c++
+		}
 	}
 	return c
 }
 
+/*
+	func ks(n int) int {
+		s := []int{1, 2, 2}
+		t := len(s)
+		c := 1
+		m := n - t
+		for m > 0 {
+			l := s[t-1]
+			e := 2 - (t % 2)
+			for l > 0 {
+				s = append(s, e)
+				l--
+				if e == 1 {
+					c++
+				}
+				m--
+				if m == 0 {
+					return c
+				}
+			}
+			t++
+		}
+		return c
+	}
+*/
 func main() {
 	for _, data := range []struct {
 		input, output int
